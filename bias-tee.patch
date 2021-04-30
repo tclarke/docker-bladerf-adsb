@@ -1,0 +1,47 @@
+diff --git a/bladeRF_adsb/bladeRF_adsb.c b/bladeRF_adsb/bladeRF_adsb.c
+index d1ce8e1..537dd71 100644
+--- a/bladeRF_adsb/bladeRF_adsb.c
++++ b/bladeRF_adsb/bladeRF_adsb.c
+@@ -15,10 +15,10 @@
+ 
+ #include <libbladeRF.h>
+ 
+-#define FPGA_FNAME_115 "./adsbx115.rbf"
+-#define FPGA_FNAME_40 "./adsbx40.rbf"
+-#define FPGA_FNAME_A4 "./adsbxA4.rbf"
+-#define FPGA_FNAME_A9 "./adsbxA9.rbf"
++#define FPGA_FNAME_115 "/bladeRF-images/adsbx115.rbf"
++#define FPGA_FNAME_40 "/bladeRF-images/adsbx40.rbf"
++#define FPGA_FNAME_A4 "/bladeRF-images/adsbxA4.rbf"
++#define FPGA_FNAME_A9 "/bladeRF-images/adsbxA9.rbf"
+ 
+ bool dump_messages = true ;
+ 
+@@ -214,7 +214,8 @@ bypass_lna:
+     sigaction(SIGINT, &action, NULL) ;
+ 
+     /* Open the device */
+-    status = bladerf_open(&dev, NULL) ;
++    bladerf_log_set_verbosity(BLADERF_LOG_LEVEL_INFO);
++    status = bladerf_open(&dev, "*:serial=8d05bba802a548a8b71525553070b0a5") ;
+     if ( status < 0) {
+         fprintf( stderr, "Couldn't open device: %s\n", bladerf_strerror(status)) ;
+         goto out ;
+@@ -256,6 +257,17 @@ bypass_lna:
+         goto out ;
+     }
+ 
++    status = bladerf_set_bias_tee(dev, BLADERF_CHANNEL_RX(0), true);
++    if (status < 0) {
++        fprintf(stderr, "Couldn't enable external LNA 1: %s\n", bladerf_strerror(status));
++        goto close;
++    }
++    status = bladerf_set_bias_tee(dev, BLADERF_CHANNEL_RX(1), true);
++    if (status < 0) {
++        fprintf(stderr, "Couldn't enable external LNA 2: %s\n", bladerf_strerror(status));
++        goto close;
++    }
++
+     /* Configure RX */
+     status = configure_module(dev, &rx_config) ;
+     if ( status < 0 ) {
